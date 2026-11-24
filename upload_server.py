@@ -120,6 +120,8 @@ def sciebo_target():
 
 def send_to_sciebo(target, receipt, archive):
     url, token, password = target
+    # File Drop writes use Nextcloud's public DAV route.
+    url = f"{url.removesuffix('/public.php/webdav')}/public.php/dav/files/{token}"
     auth = base64.b64encode(f"{token}:{password}".encode()).decode("ascii")
     request = Request(f"{url}/{receipt}.zip", data=archive, method="PUT", headers={
         "Authorization": f"Basic {auth}",
