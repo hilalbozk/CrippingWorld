@@ -43,7 +43,7 @@ def text_field(data, key, limit):
     return value.strip()
 
 
-def archive_submission(payload, receipt):
+def archive_submission(payload, receipt, *, who_am_i=False):
     if not isinstance(payload, dict):
         raise InvalidSubmission("Invalid submission.")
     chosen = text_field(payload, "chosen", 200)
@@ -59,7 +59,22 @@ def archive_submission(payload, receipt):
     uploads = payload.get("files", [])
     if not isinstance(uploads, list) or len(uploads) > MAX_FILES:
         raise InvalidSubmission(f"Choose up to {MAX_FILES} files.")
-    if not (reflection or uploads):
+    who_answers = None
+    if who_am_i:
+        answers = payload.get("whoAmI")
+        if not isinstance(answers, dict):
+            raise InvalidSubmission("Invalid Who Am I answers.")
+        who_answers = {
+            "description": text_field(answers, "description", 10000),
+            "location": text_field(answers, "location", 1000),
+            "everyday_spaces": text_field(answers, "everyday_spaces", 10000),
+            "context": text_field(answers, "context", 10000),
+        }
+        if len(uploads) > 1:
+            raise InvalidSubmission("Choose one Who Am I attachment.")
+        if not (chosen or any(who_answers.values()) or uploads):
+            raise InvalidSubmission("Add an answer or a file.")
+    elif not (reflection or uploads):
         raise InvalidSubmission("Add a reflection or a file.")
 
     archive = io.BytesIO()
@@ -88,7 +103,7 @@ def archive_submission(payload, receipt):
             bundle.writestr(path, contents)
             files.append({"name": name, "path": path})
 
-        bundle.writestr("submission.json", json.dumps({
+        manifest = {
             "id": receipt,
             "received_at": datetime.now(timezone.utc).isoformat(),
             "chosen_name_or_code": chosen,
@@ -97,7 +112,10 @@ def archive_submission(payload, receipt):
             "participation_statement_acknowledged": True,
             "would_consider_thesis_reproduction": reproduce,
             "attachments": files,
-        }, ensure_ascii=True, indent=2))
+        }
+        if who_answers is not None:
+            manifest["who_am_i"] = who_answers
+        bundle.writestr("submission.json", json.dumps(manifest, ensure_ascii=True, indent=2))
     return archive.getvalue()
 
 
@@ -156,7 +174,9 @@ def application(environ, start_response):
     method = environ.get("REQUEST_METHOD")
     if path == "/healthz" and method == "GET":
         return reply(200, status="ok")
-    if path != "/submissions":
+    # Keep older deployments from accepting a Who Am I card without its answers.
+    who_am_i = path == "/submissions/who-am-i"
+    if path != "/submissions" and not who_am_i:
         return reply(404, error="Endpoint not found.")
     if not allowed or origin != allowed:
         return reply(403, error="This website is not configured for uploads.")
@@ -185,7 +205,7 @@ def application(environ, start_response):
     receipt = uuid.uuid4().hex
     try:
         payload = json.loads(environ["wsgi.input"].read(length))
-        archive = archive_submission(payload, receipt)
+        archive = archive_submission(payload, receipt, who_am_i=who_am_i)
     except InvalidSubmission as error:
         return reply(400, error=str(error))
     except (ValueError, RecursionError):

@@ -5,6 +5,17 @@ const uploads = document.getElementById('uploads');
 const formStatus = document.getElementById('formStatus');
 const fileNote = document.getElementById('fileNote');
 const uploadLimits = fileNote.textContent;
+const whoForm = document.getElementById('whoForm');
+const whoUpload = document.getElementById('whoCardFile');
+const whoSubmit = document.getElementById('submitWho');
+const whoStatus = document.getElementById('whoFormStatus');
+const whoName = document.getElementById('whoName');
+const whoFields = {
+  description: document.getElementById('whoDescribe'),
+  location: document.getElementById('whoWhere'),
+  everyday_spaces: document.getElementById('whoSpaces'),
+  context: document.getElementById('whoContext')
+};
 const megabyte = 1024 ** 2;
 const supportedFile = /\.(pdf|jpg|jpeg|png|gif|webp|heic|heif|mp3|m4a|aac|wav|ogg|opus|webm|flac|txt|doc|docx)$/i;
 
@@ -13,6 +24,8 @@ if (submissionEndpoint) {
   submitButton.textContent = 'Submit contribution';
   document.getElementById('submissionAvailability').textContent =
     'Your contribution will be sent to the study team’s sciebo storage when you submit it.';
+  document.getElementById('whoAvailability').textContent =
+    'Your answers and any attached file will go to the study team’s sciebo storage when you submit.';
 }
 
 uploads.addEventListener('change', () => {
@@ -32,6 +45,45 @@ function encodeFile(file) {
   });
 }
 
+async function sendSubmission({ form, status, endpoint, submission, files, maxFiles, limits }) {
+  if (files.length > maxFiles || files.some(file => !file.size || file.size > 10 * megabyte) ||
+      files.reduce((total, file) => total + file.size, 0) > 20 * megabyte) {
+    status.textContent = `Choose nonempty files. ${limits}`;
+    return;
+  }
+  if (files.some(file => !supportedFile.test(file.name))) {
+    status.textContent = 'Choose a supported image, audio file, PDF, text file or Word document.';
+    return;
+  }
+
+  form.setAttribute('aria-busy', 'true');
+  const controls = Array.from(form.elements);
+  controls.forEach(control => { control.disabled = true; });
+  status.textContent = 'Sending your contribution…';
+
+  try {
+    submission.files = await Promise.all(files.map(encodeFile));
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'omit',
+      redirect: 'error',
+      body: JSON.stringify(submission)
+    });
+    const result = await response.json();
+    if (response.status !== 201 || typeof result.id !== 'string' || !/^[a-f0-9]{32}$/.test(result.id)) {
+      throw new Error('The upload was not confirmed.');
+    }
+    form.reset();
+    status.textContent = `Contribution received. Your receipt ID is ${result.id}.`;
+  } catch {
+    status.textContent = 'We could not confirm your submission. Your entries are still here. If the problem continues, contact the researcher.';
+  } finally {
+    controls.forEach(control => { control.disabled = false; });
+    form.removeAttribute('aria-busy');
+  }
+}
+
 contributionForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (!submissionEndpoint || contributionForm.hasAttribute('aria-busy')) return;
@@ -42,48 +94,54 @@ contributionForm.addEventListener('submit', async event => {
     formStatus.textContent = 'Add a reflection or a file before submitting.';
     return;
   }
-  if (files.length > 5 || files.some(file => !file.size || file.size > 10 * megabyte) ||
-      files.reduce((total, file) => total + file.size, 0) > 20 * megabyte) {
-    formStatus.textContent = `Choose nonempty files. ${uploadLimits}`;
-    return;
-  }
-  if (files.some(file => !supportedFile.test(file.name))) {
-    formStatus.textContent = 'Choose a supported image, audio file, PDF, text file or Word document.';
-    return;
-  }
 
-  const submission = {
-    chosen: document.getElementById('chosen').value,
-    game: document.getElementById('gameSelect').value,
-    reflection,
-    consentAcknowledged: document.getElementById('consent').checked,
-    considerThesisReproduction: document.getElementById('reproduce').checked
-  };
-  contributionForm.setAttribute('aria-busy', 'true');
-  const controls = Array.from(contributionForm.elements);
-  controls.forEach(control => { control.disabled = true; });
-  formStatus.textContent = 'Sending your contribution…';
+  await sendSubmission({
+    form: contributionForm,
+    status: formStatus,
+    endpoint: submissionEndpoint,
+    submission: {
+      chosen: document.getElementById('chosen').value,
+      game: document.getElementById('gameSelect').value,
+      reflection,
+      consentAcknowledged: document.getElementById('consent').checked,
+      considerThesisReproduction: document.getElementById('reproduce').checked
+    },
+    files,
+    maxFiles: 5,
+    limits: uploadLimits
+  });
+  uploads.dispatchEvent(new Event('change'));
+});
 
-  try {
-    submission.files = await Promise.all(files.map(encodeFile));
-    const response = await fetch(submissionEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'omit',
-      redirect: 'error',
-      body: JSON.stringify(submission)
-    });
-    const result = await response.json();
-    if (response.status !== 201 || !/^[a-f0-9]{32}$/.test(result.id)) {
-      throw new Error('The upload was not confirmed.');
-    }
-    contributionForm.reset();
-    uploads.dispatchEvent(new Event('change'));
-    formStatus.textContent = `Contribution received. Your receipt ID is ${result.id}.`;
-  } catch {
-    formStatus.textContent = 'We could not confirm your submission. Your entries are still here. If the problem continues, contact the researcher.';
-  } finally {
-    controls.forEach(control => { control.disabled = false; });
-    contributionForm.removeAttribute('aria-busy');
-  }
+function updateWhoSubmit() {
+  const hasContent = whoUpload.files.length || [whoName, ...Object.values(whoFields)]
+    .some(field => field.value.trim());
+  whoSubmit.disabled = !submissionEndpoint || !hasContent || whoForm.hasAttribute('aria-busy');
+}
+
+whoForm.addEventListener('input', updateWhoSubmit);
+whoUpload.addEventListener('change', updateWhoSubmit);
+updateWhoSubmit();
+
+whoForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (whoSubmit.disabled) return;
+
+  await sendSubmission({
+    form: whoForm,
+    status: whoStatus,
+    endpoint: `${submissionEndpoint}/who-am-i`,
+    submission: {
+      chosen: whoName.value.trim(),
+      game: '',
+      reflection: '',
+      consentAcknowledged: document.getElementById('whoConsent').checked,
+      considerThesisReproduction: document.getElementById('whoReproduce').checked,
+      whoAmI: Object.fromEntries(Object.entries(whoFields).map(([key, field]) => [key, field.value.trim()]))
+    },
+    files: Array.from(whoUpload.files),
+    maxFiles: 1,
+    limits: document.getElementById('whoFileNote').textContent
+  });
+  updateWhoSubmit();
 });
