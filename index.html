@@ -4,8 +4,43 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
 <meta name="submission-endpoint" content="https://p01--cripping-space-upload--c7cr9yrr85qc.code.run/submissions">
 <title>Cripping Space : A Participatory Research Toolkit</title>
+<script>
+(() => {
+  const root = document.documentElement;
+  root.classList.add('scroll-nav');
+
+  function updateNavigation() {
+    root.classList.toggle('has-scrolled', window.scrollY > 0);
+  }
+
+  updateNavigation();
+  window.addEventListener('scroll', updateNavigation, { passive: true });
+  window.addEventListener('pageshow', updateNavigation);
+  document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.querySelector('.nav');
+    new ResizeObserver(() => {
+      root.style.setProperty('--nav-height', nav.offsetHeight + 'px');
+    }).observe(nav);
+  });
+})();
+</script>
 <style>
 :root{--ink:#171c1b;--muted:#4d5753;--line:#cbd2cf;--paper:#f9faf7;--teal:#c4e6e4;--yellow:#f9d98f;--pink:#f8c2b6;--blue:#bac3ea;--green:#d7e2bc;--focus:#0b5e6c;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper)}*{box-sizing:border-box}body{margin:0;line-height:1.55}button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:3px}button:disabled{cursor:not-allowed;opacity:.55}.skip{position:absolute;top:-80px;left:8px;background:white;padding:10px;z-index:99}.skip:focus{top:8px}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(18px,5vw,78px);border-bottom:1px solid #d4ded9;background:#fffffff0;position:sticky;top:0;z-index:10;backdrop-filter:blur(14px)}.logo{font-weight:950;line-height:.87;letter-spacing:-.07em;font-size:23px;text-decoration:none}.navlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;font-weight:700}.navlinks a{text-decoration:none;padding:6px 0}.navlinks a:hover{text-decoration:underline}.hero{min-height:510px;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:82px 20px;overflow:hidden;background:radial-gradient(circle at 13% 23%,#f7ddaa 0,transparent 29%),radial-gradient(circle at 75% 16%,#a9cfc9 0,transparent 30%),radial-gradient(circle at 16% 88%,#f4b6a4 0,transparent 26%),radial-gradient(circle at 81% 80%,#bfc8e7 0,transparent 29%),#f9faf7}.bubble{position:absolute;border-radius:50%;filter:blur(17px);opacity:.65;z-index:-1}.b1{width:90px;height:90px;background:#ce614f;top:11%;left:25%}.b2{width:110px;height:110px;background:#255b64;top:44%;right:16%}.b3{width:70px;height:70px;background:#e9b12a;bottom:9%;left:40%}.b4{width:100px;height:100px;background:#668347;bottom:17%;right:29%}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800}.hero h1{font-size:clamp(56px,11vw,142px);font-weight:950;letter-spacing:-.09em;line-height:.85;max-width:850px;margin:24px 0;text-shadow:0 1px #fff}.hero p{font-size:clamp(16px,2.3vw,22px);max-width:560px;font-weight:650;margin:10px 0 28px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border:1.5px solid var(--ink);border-radius:100px;text-decoration:none;background:var(--ink);color:white;font-size:14px;font-weight:750;min-height:48px}.btn.alt{background:transparent;color:var(--ink)}.btn:hover{transform:translateY(-1px)}.container{max-width:1160px;padding:0 24px;margin:auto}.section{padding:76px 0}.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:25px}.section h2{font-size:clamp(32px,5vw,56px);letter-spacing:-.055em;line-height:1;margin:10px 0}.sectionhead p{max-width:390px;color:var(--muted)}.intro{background:#eaf0eb;border-block:1px solid #dce7e0}.introgrid{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.intro p{font-size:17px}.mini{display:flex;flex-direction:column;gap:13px}.miniline{background:white;border:1px solid #d0dbd3;border-radius:16px;padding:16px 18px}.miniline b{margin-right:16px;font-size:18px}.games{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.game{background:var(--tone);border:1px solid #1b26201f;border-radius:22px;min-height:258px;padding:20px;display:flex;flex-direction:column;align-items:start;text-align:left;transition:transform .17s,box-shadow .17s;width:100%;color:var(--ink)}.game:hover{transform:translateY(-4px);box-shadow:0 10px 24px #1b262019}.game .num{font-weight:900;font-size:20px}.game .gtitle{font-size:23px;font-weight:900;line-height:1.04;letter-spacing:-.035em;margin:auto 0 12px}.game .q{font-size:12px;font-weight:650;line-height:1.4}.game .arrow{margin-top:12px;font-size:21px}.detail{margin-top:28px;background:white;border:1px solid var(--line);border-radius:26px;overflow:hidden;display:none}.detail.show{display:block}.detailtop{background:var(--tone);padding:28px clamp(20px,4vw,50px)}.detailtop h3{font-size:clamp(29px,4vw,51px);line-height:1;letter-spacing:-.05em;margin:15px 0}.detailtop p{max-width:620px}.detailbody{display:grid;grid-template-columns:1fr 1fr;gap:38px;padding:clamp(20px,4vw,48px)}.detailbody h4{font-size:21px;letter-spacing:-.03em;margin:0 0 12px}.detailbody li{margin-bottom:9px}.prompt{border-left:3px solid var(--ink);padding-left:16px;margin-bottom:17px}.fine{color:var(--muted);font-size:13px}.close{background:white;border:1px solid #29352d;border-radius:20px;padding:7px 13px;font-weight:bold}.share{background:#f5f0e9}.sharegrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px}.sharegrid p{max-width:450px}.panel{background:white;border:1px solid var(--line);border-radius:23px;padding:24px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}.field label{font-size:13px;font-weight:750}.field input,.field textarea,.field select{border:1px solid #8d9993;padding:12px;border-radius:9px;background:white;color:var(--ink);width:100%;min-height:46px}.field textarea{min-height:125px;resize:vertical}.check{display:flex;align-items:start;gap:9px;margin:14px 0;font-size:13px}.check input{margin-top:4px;flex-shrink:0;accent-color:#16565b}.notice{border:1px solid #a7b9b3;background:#eef5f2;padding:13px;border-radius:10px;font-size:13px;margin-top:16px}.footer{padding:32px 24px;background:#1e2e2b;color:#fff}.footerinner{max-width:1160px;margin:auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}.footer a{color:white}.small{font-size:12px;color:#c9d7d1}.status{font-size:13px;min-height:24px}.textlink{font-weight:700;text-underline-offset:3px}.hide{display:none!important}@media(max-width:850px){.games{grid-template-columns:repeat(2,1fr)}.introgrid,.sharegrid,.detailbody{grid-template-columns:1fr;gap:22px}.navlinks{gap:10px}}@media(max-width:500px){.games{grid-template-columns:1fr 1fr;gap:10px}.game{min-height:230px;padding:15px}.game .gtitle{font-size:20px}.hero{min-height:490px}.nav{padding:13px 18px}.navlinks{font-size:12px}.container{padding:0 18px}.section{padding:56px 0}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+.scroll-nav {scroll-padding-top:var(--nav-height, 0px)}
+.scroll-nav .nav {
+  position:fixed;
+  inset-inline:0;
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(-12px);
+  transition:transform .18s ease-out, opacity .18s ease-out;
+}
+.scroll-nav.has-scrolled .nav,
+.scroll-nav .nav:has(:focus-visible) {
+  opacity:1;
+  pointer-events:auto;
+  transform:translateY(0);
+}
 .downloads{margin:22px 0 18px;padding:20px;border:1px solid #b7c7c0;border-radius:18px;background:#ffffffbd}.downloads h4{margin:0 0 6px}.downloads .fine{margin:0 0 16px}.downloadlinks{display:grid;gap:10px}.downloadlink{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid #778e84;border-radius:12px;text-decoration:none;background:#fff;line-height:1.3;transition:background .16s,transform .16s}.downloadlink:hover{background:#edf6f3;transform:translateY(-1px)}.downloadlink>span:first-child{font-size:24px;font-weight:700;min-width:24px}.downloadlink strong,.downloadlink small{display:block}.downloadlink small{font-size:12px;color:#485953;margin-top:4px}
 .about-subtitle{font-size:19px;letter-spacing:-.025em;margin:23px 0 7px}.detail-subtitle{font-size:17px!important;margin:23px 0 7px!important}.introgrid{align-items:start}.intro .fine{font-size:13px}.detailbody>div>p{max-width:57ch}
 
