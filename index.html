@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark">
 <meta name="submission-endpoint" content="https://p01--cripping-space-upload--c7cr9yrr85qc.code.run/submissions">
 <title>Cripping Space : A Participatory Research Toolkit</title>
 <script>
 (() => {
   const root = document.documentElement;
   root.classList.add('scroll-nav');
+
+  const themeKey = 'cripping-space-theme';
+  const themeNames = { system: 'System', dark: 'Dark', light: 'Light' };
+  const themeIcons = { system: '\u25d0', dark: '\u263e', light: '\u2600\ufe0e' };
+
+  try {
+    const savedTheme = localStorage.getItem(themeKey);
+    if (savedTheme === 'light' || savedTheme === 'dark') root.dataset.theme = savedTheme;
+  } catch {
+    // The theme can still be changed for this page when storage is unavailable.
+  }
 
   function updateNavigation() {
     root.classList.toggle('has-scrolled', window.scrollY > 0);
@@ -17,6 +28,42 @@
   window.addEventListener('scroll', updateNavigation, { passive: true });
   window.addEventListener('pageshow', updateNavigation);
   document.addEventListener('DOMContentLoaded', () => {
+    const themeButton = document.getElementById('themeButton');
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+    function nextTheme() {
+      const current = root.dataset.theme || 'system';
+      const system = systemTheme.matches ? 'dark' : 'light';
+      const opposite = systemTheme.matches ? 'light' : 'dark';
+      return { system: opposite, [opposite]: system, [system]: 'system' }[current];
+    }
+
+    function updateThemeButton() {
+      const current = root.dataset.theme || 'system';
+      const label = `Theme: ${themeNames[current]}. Switch to ${themeNames[nextTheme()]}.`;
+      themeButton.title = label;
+      themeButton.setAttribute('aria-label', label);
+      themeButton.firstElementChild.textContent = themeIcons[current];
+    }
+
+    themeButton.addEventListener('click', () => {
+      const theme = nextTheme();
+      if (theme === 'system') delete root.dataset.theme;
+      else root.dataset.theme = theme;
+
+      try {
+        if (theme === 'system') localStorage.removeItem(themeKey);
+        else localStorage.setItem(themeKey, theme);
+      } catch {
+        // The current page still uses the selected theme.
+      }
+      updateThemeButton();
+    });
+
+    systemTheme.addEventListener('change', updateThemeButton);
+    updateThemeButton();
+    themeButton.hidden = false;
+
     const nav = document.querySelector('.nav');
     new ResizeObserver(() => {
       root.style.setProperty('--nav-height', nav.offsetHeight + 'px');
@@ -25,7 +72,30 @@
 })();
 </script>
 <style>
-:root{--ink:#171c1b;--muted:#4d5753;--line:#cbd2cf;--paper:#f9faf7;--teal:#c4e6e4;--yellow:#f9d98f;--pink:#f8c2b6;--blue:#bac3ea;--green:#d7e2bc;--focus:#0b5e6c;font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:var(--paper)}*{box-sizing:border-box}body{margin:0;line-height:1.55}button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:3px}button:disabled{cursor:not-allowed;opacity:.55}.skip{position:absolute;top:-80px;left:8px;background:white;padding:10px;z-index:99}.skip:focus{top:8px}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(18px,5vw,78px);border-bottom:1px solid #d4ded9;background:#fffffff0;position:sticky;top:0;z-index:10;backdrop-filter:blur(14px)}.logo{font-weight:950;line-height:.87;letter-spacing:-.07em;font-size:23px;text-decoration:none}.navlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;font-weight:700}.navlinks a{text-decoration:none;padding:6px 0}.navlinks a:hover{text-decoration:underline}.hero{min-height:510px;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:82px 20px;overflow:hidden;background:radial-gradient(circle at 13% 23%,#f7ddaa 0,transparent 29%),radial-gradient(circle at 75% 16%,#a9cfc9 0,transparent 30%),radial-gradient(circle at 16% 88%,#f4b6a4 0,transparent 26%),radial-gradient(circle at 81% 80%,#bfc8e7 0,transparent 29%),#f9faf7}.bubble{position:absolute;border-radius:50%;filter:blur(17px);opacity:.65;z-index:-1}.b1{width:90px;height:90px;background:#ce614f;top:11%;left:25%}.b2{width:110px;height:110px;background:#255b64;top:44%;right:16%}.b3{width:70px;height:70px;background:#e9b12a;bottom:9%;left:40%}.b4{width:100px;height:100px;background:#668347;bottom:17%;right:29%}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800}.hero h1{font-size:clamp(56px,11vw,142px);font-weight:950;letter-spacing:-.09em;line-height:.85;max-width:850px;margin:24px 0;text-shadow:0 1px #fff}.hero p{font-size:clamp(16px,2.3vw,22px);max-width:560px;font-weight:650;margin:10px 0 28px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border:1.5px solid var(--ink);border-radius:100px;text-decoration:none;background:var(--ink);color:white;font-size:14px;font-weight:750;min-height:48px}.btn.alt{background:transparent;color:var(--ink)}.btn:hover{transform:translateY(-1px)}.container{max-width:1160px;padding:0 24px;margin:auto}.section{padding:76px 0}.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:25px}.section h2{font-size:clamp(32px,5vw,56px);letter-spacing:-.055em;line-height:1;margin:10px 0}.sectionhead p{max-width:390px;color:var(--muted)}.intro{background:#eaf0eb;border-block:1px solid #dce7e0}.introgrid{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.intro p{font-size:17px}.mini{display:flex;flex-direction:column;gap:13px}.miniline{background:white;border:1px solid #d0dbd3;border-radius:16px;padding:16px 18px}.miniline b{margin-right:16px;font-size:18px}.games{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.game{background:var(--tone);border:1px solid #1b26201f;border-radius:22px;min-height:258px;padding:20px;display:flex;flex-direction:column;align-items:start;text-align:left;transition:transform .17s,box-shadow .17s;width:100%;color:var(--ink)}.game:hover{transform:translateY(-4px);box-shadow:0 10px 24px #1b262019}.game .num{font-weight:900;font-size:20px}.game .gtitle{font-size:23px;font-weight:900;line-height:1.04;letter-spacing:-.035em;margin:auto 0 12px}.game .q{font-size:12px;font-weight:650;line-height:1.4}.game .arrow{margin-top:12px;font-size:21px}.detail{margin-top:28px;background:white;border:1px solid var(--line);border-radius:26px;overflow:hidden;display:none}.detail.show{display:block}.detailtop{background:var(--tone);padding:28px clamp(20px,4vw,50px)}.detailtop h3{font-size:clamp(29px,4vw,51px);line-height:1;letter-spacing:-.05em;margin:15px 0}.detailtop p{max-width:620px}.detailbody{display:grid;grid-template-columns:1fr 1fr;gap:38px;padding:clamp(20px,4vw,48px)}.detailbody h4{font-size:21px;letter-spacing:-.03em;margin:0 0 12px}.detailbody li{margin-bottom:9px}.prompt{border-left:3px solid var(--ink);padding-left:16px;margin-bottom:17px}.fine{color:var(--muted);font-size:13px}.close{background:white;border:1px solid #29352d;border-radius:20px;padding:7px 13px;font-weight:bold}.share{background:#f5f0e9}.sharegrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px}.sharegrid p{max-width:450px}.panel{background:white;border:1px solid var(--line);border-radius:23px;padding:24px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}.field label{font-size:13px;font-weight:750}.field input,.field textarea,.field select{border:1px solid #8d9993;padding:12px;border-radius:9px;background:white;color:var(--ink);width:100%;min-height:46px}.field textarea{min-height:125px;resize:vertical}.check{display:flex;align-items:start;gap:9px;margin:14px 0;font-size:13px}.check input{margin-top:4px;flex-shrink:0;accent-color:#16565b}.notice{border:1px solid #a7b9b3;background:#eef5f2;padding:13px;border-radius:10px;font-size:13px;margin-top:16px}.footer{padding:32px 24px;background:#1e2e2b;color:#fff}.footerinner{max-width:1160px;margin:auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}.footer a{color:white}.small{font-size:12px;color:#c9d7d1}.status{font-size:13px;min-height:24px}.textlink{font-weight:700;text-underline-offset:3px}.hide{display:none!important}@media(max-width:850px){.games{grid-template-columns:repeat(2,1fr)}.introgrid,.sharegrid,.detailbody{grid-template-columns:1fr;gap:22px}.navlinks{gap:10px}}@media(max-width:500px){.games{grid-template-columns:1fr 1fr;gap:10px}.game{min-height:230px;padding:15px}.game .gtitle{font-size:20px}.hero{min-height:490px}.nav{padding:13px 18px}.navlinks{font-size:12px}.container{padding:0 18px}.section{padding:56px 0}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+:root {
+  color-scheme:light dark;
+  --ink:light-dark(#171c1b,#edf1ed);
+  --muted:light-dark(#4d5753,#b9c5bf);
+  --line:light-dark(#cbd2cf,#47534f);
+  --paper:light-dark(#f9faf7,#151b19);
+  --surface:light-dark(#fff,#222b28);
+  --focus:light-dark(#0b5e6c,#83e4e6);
+  --nav-bg:light-dark(#fffffff0,#1b2421f0);
+  --intro-bg:light-dark(#eaf0eb,#1b2620);
+  --who-bg:light-dark(#f0f1f8,#202332);
+  --share-bg:light-dark(#f5f0e9,#26221f);
+  --field-bg:light-dark(#fff,#151c1a);
+  --field-line:light-dark(#8d9993,#7b8982);
+  --download-line:light-dark(#778e84,#7b9288);
+  --download-hover:light-dark(#edf6f3,#303f38);
+  --footer-bg:light-dark(#1e2e2b,#101714);
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--ink);
+  background:var(--paper);
+}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;line-height:1.55}button,input,textarea,select{font:inherit}button{cursor:pointer}a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid var(--focus);outline-offset:3px}button:disabled{cursor:not-allowed;opacity:.55}.skip{position:absolute;top:-80px;left:8px;background:var(--surface);padding:10px;z-index:99}.skip:focus{top:8px}.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px clamp(18px,5vw,78px);border-bottom:1px solid light-dark(#d4ded9,var(--line));background:var(--nav-bg);position:sticky;top:0;z-index:10;backdrop-filter:blur(14px)}.logo{font-weight:950;line-height:.87;letter-spacing:-.07em;font-size:23px;text-decoration:none}.navlinks{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;font-weight:700}.navlinks a{text-decoration:none;padding:6px 0}.navlinks a:hover{text-decoration:underline}.hero{min-height:510px;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:82px 20px;overflow:hidden;background:radial-gradient(circle at 13% 23%,light-dark(#f7ddaa,#47351e) 0,transparent 29%),radial-gradient(circle at 75% 16%,light-dark(#a9cfc9,#21413c) 0,transparent 30%),radial-gradient(circle at 16% 88%,light-dark(#f4b6a4,#482e29) 0,transparent 26%),radial-gradient(circle at 81% 80%,light-dark(#bfc8e7,#2e354e) 0,transparent 29%),var(--paper)}.bubble{position:absolute;border-radius:50%;filter:blur(17px);opacity:.65;z-index:-1}.b1{width:90px;height:90px;background:light-dark(#ce614f,#64382f);top:11%;left:25%}.b2{width:110px;height:110px;background:light-dark(#255b64,#22484d);top:44%;right:16%}.b3{width:70px;height:70px;background:light-dark(#e9b12a,#665022);bottom:9%;left:40%}.b4{width:100px;height:100px;background:light-dark(#668347,#3b4e2d);bottom:17%;right:29%}.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:12px;font-weight:800}.hero h1{font-size:clamp(56px,11vw,142px);font-weight:950;letter-spacing:-.09em;line-height:.85;max-width:850px;margin:24px 0;text-shadow:0 1px light-dark(#fff,#101513)}.hero p{font-size:clamp(16px,2.3vw,22px);max-width:560px;font-weight:650;margin:10px 0 28px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border:1.5px solid var(--ink);border-radius:100px;text-decoration:none;background:var(--ink);color:var(--surface);font-size:14px;font-weight:750;min-height:48px}.btn.alt{background:transparent;color:var(--ink)}.btn:hover{transform:translateY(-1px)}.container{max-width:1160px;padding:0 24px;margin:auto}.section{padding:76px 0}.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:20px;flex-wrap:wrap;margin-bottom:25px}.section h2{font-size:clamp(32px,5vw,56px);letter-spacing:-.055em;line-height:1;margin:10px 0}.sectionhead p{max-width:390px;color:var(--muted)}.intro{background:var(--intro-bg);border-block:1px solid light-dark(#dce7e0,var(--line))}.introgrid{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.intro p{font-size:17px}.mini{display:flex;flex-direction:column;gap:13px}.miniline{background:var(--surface);border:1px solid light-dark(#d0dbd3,var(--line));border-radius:16px;padding:16px 18px}.miniline b{margin-right:16px;font-size:18px}.games{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.game{background:var(--game-bg);border:1px solid light-dark(#1b26201f,var(--line));border-radius:22px;min-height:258px;padding:20px;display:flex;flex-direction:column;align-items:start;text-align:left;transition:transform .17s,box-shadow .17s;width:100%;color:var(--ink)}.game:hover{transform:translateY(-4px);box-shadow:0 10px 24px light-dark(#1b262019,#0005)}.game .num{font-weight:900;font-size:20px}.game .gtitle{font-size:23px;font-weight:900;line-height:1.04;letter-spacing:-.035em;margin:auto 0 12px}.game .q{font-size:12px;font-weight:650;line-height:1.4}.game .arrow{margin-top:12px;font-size:21px}.detail{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:26px;overflow:hidden;display:none}.detail.show{display:block}.detailtop{background:var(--game-bg);padding:28px clamp(20px,4vw,50px)}.detailtop h3{font-size:clamp(29px,4vw,51px);line-height:1;letter-spacing:-.05em;margin:15px 0}.detailtop p{max-width:620px}.detailbody{display:grid;grid-template-columns:1fr 1fr;gap:38px;padding:clamp(20px,4vw,48px)}.detailbody h4{font-size:21px;letter-spacing:-.03em;margin:0 0 12px}.detailbody li{margin-bottom:9px}.prompt{border-left:3px solid var(--ink);padding-left:16px;margin-bottom:17px}.fine{color:var(--muted);font-size:13px}.close{background:var(--surface);color:var(--ink);border:1px solid light-dark(#29352d,var(--field-line));border-radius:20px;padding:7px 13px;font-weight:bold}.share{background:var(--share-bg)}.sharegrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px}.sharegrid p{max-width:450px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:23px;padding:24px}.field{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}.field label{font-size:13px;font-weight:750}.field input,.field textarea,.field select{border:1px solid var(--field-line);padding:12px;border-radius:9px;background:var(--field-bg);color:var(--ink);width:100%;min-height:46px}.field textarea{min-height:125px;resize:vertical}.check{display:flex;align-items:start;gap:9px;margin:14px 0;font-size:13px}.check input{margin-top:4px;flex-shrink:0;accent-color:light-dark(#16565b,#83e4e6)}.notice{border:1px solid light-dark(#a7b9b3,var(--line));background:light-dark(#eef5f2,#27372f);padding:13px;border-radius:10px;font-size:13px;margin-top:16px}.footer{padding:32px 24px;background:var(--footer-bg);color:#fff}.footerinner{max-width:1160px;margin:auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}.footer a{color:white}.small{font-size:12px;color:#c9d7d1}.status{font-size:13px;min-height:24px}.textlink{font-weight:700;text-underline-offset:3px}.hide{display:none!important}@media(max-width:850px){.games{grid-template-columns:repeat(2,1fr)}.introgrid,.sharegrid,.detailbody{grid-template-columns:1fr;gap:22px}.navlinks{gap:10px}}@media(max-width:500px){.games{grid-template-columns:1fr 1fr;gap:10px}.game{min-height:230px;padding:15px}.game .gtitle{font-size:20px}.hero{min-height:490px}.nav{padding:13px 18px}.navlinks{font-size:12px}.container{padding:0 18px}.section{padding:56px 0}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
 .scroll-nav {scroll-padding-top:var(--nav-height, 0px)}
 .scroll-nav .nav {
   position:fixed;
@@ -41,10 +111,10 @@
   pointer-events:auto;
   transform:translateY(0);
 }
-.downloads{margin:22px 0 18px;padding:20px;border:1px solid #b7c7c0;border-radius:18px;background:#ffffffbd}.downloads h4{margin:0 0 6px}.downloads .fine{margin:0 0 16px}.downloadlinks{display:grid;gap:10px}.downloadlink{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid #778e84;border-radius:12px;text-decoration:none;background:#fff;line-height:1.3;transition:background .16s,transform .16s}.downloadlink:hover{background:#edf6f3;transform:translateY(-1px)}.downloadlink>span:first-child{font-size:24px;font-weight:700;min-width:24px}.downloadlink strong,.downloadlink small{display:block}.downloadlink small{font-size:12px;color:#485953;margin-top:4px}
+.downloads{margin:22px 0 18px;padding:20px;border:1px solid light-dark(#b7c7c0,var(--line));border-radius:18px;background:light-dark(#ffffffbd,#222b28df)}.downloads h4{margin:0 0 6px}.downloads .fine{margin:0 0 16px}.downloadlinks{display:grid;gap:10px}.downloadlink{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1.5px solid var(--download-line);border-radius:12px;text-decoration:none;background:var(--surface);line-height:1.3;transition:background .16s,transform .16s}.downloadlink:hover{background:var(--download-hover);transform:translateY(-1px)}.downloadlink>span:first-child{font-size:24px;font-weight:700;min-width:24px}.downloadlink strong,.downloadlink small{display:block}.downloadlink small{font-size:12px;color:light-dark(#485953,var(--muted));margin-top:4px}
 .about-subtitle{font-size:19px;letter-spacing:-.025em;margin:23px 0 7px}.detail-subtitle{font-size:17px!important;margin:23px 0 7px!important}.introgrid{align-items:start}.intro .fine{font-size:13px}.detailbody>div>p{max-width:57ch}
 
-.who{background:#f0f1f8}.whogrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}.whointro p{font-size:17px;line-height:1.65;max-width:52ch}.whointro .downloadlink{margin:24px 0 15px;max-width:420px}@media(max-width:850px){.whogrid{grid-template-columns:1fr;gap:24px}}
+.who{background:var(--who-bg)}.whogrid{display:grid;grid-template-columns:.85fr 1.15fr;gap:48px;align-items:start}.whointro p{font-size:17px;line-height:1.65;max-width:52ch}.whointro .downloadlink{margin:24px 0 15px;max-width:420px}@media(max-width:850px){.whogrid{grid-template-columns:1fr;gap:24px}}
 /* Slightly larger game descriptions for comfortable reading. */
 .game .q{font-size:14px;line-height:1.5}
 .detailtop p{font-size:18px;line-height:1.6}
@@ -53,13 +123,32 @@
 .detail-subtitle{font-size:19px!important}
 .detailbody .prompt p{font-size:17px}
 .detailbody .fine{font-size:14px;line-height:1.55}
+.game,.detailtop {
+  --game-bg:light-dark(var(--tone),color-mix(in srgb,var(--tone) 21%,#151b19));
+}
+.footerinner{align-items:center}
+.footer :focus-visible{outline-color:#83e4e6}
+.theme-button {
+  margin-inline-start:auto;
+  width:36px;
+  height:36px;
+  padding:0;
+  border:1px solid #8fa9a0;
+  border-radius:50%;
+  background:transparent;
+  color:inherit;
+  font-size:19px;
+  line-height:1;
+}
+.theme-button:hover{background:#ffffff1a}
+.theme-button span{display:block}
 </style>
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
 <header class="nav"><a href="#home" class="logo" aria-label="Cripping Space, home">CRIPPING<br>SPACE</a><nav class="navlinks" aria-label="Main navigation"><a href="#about">About</a><a href="#who">Who Am I?</a><a href="#explore">The games</a><a href="#share">Share</a></nav></header>
 <main id="main">
-<section class="hero" id="home"><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div><div class="bubble b4"></div><span class="eyebrow">A participatory research toolkit</span><h1>CRIPPING<br>SPACE</h1><p>Exploring everyday spaces through different bodies, rhythms, and lived experiences.</p><a href="#explore" class="btn">Explore the games <span aria-hidden="true">↗</span></a><p class="fine" style="margin-top:18px;color:#28312e">No right way to play. No fixed pace.</p></section>
+<section class="hero" id="home"><div class="bubble b1"></div><div class="bubble b2"></div><div class="bubble b3"></div><div class="bubble b4"></div><span class="eyebrow">A participatory research toolkit</span><h1>CRIPPING<br>SPACE</h1><p>Exploring everyday spaces through different bodies, rhythms, and lived experiences.</p><a href="#explore" class="btn">Explore the games <span aria-hidden="true">↗</span></a><p class="fine" style="margin-top:18px;color:light-dark(#28312e,var(--muted))">No right way to play. No fixed pace.</p></section>
 <section class="section intro" id="about"><div class="container introgrid"><div><div class="eyebrow">Welcome</div><h2>Space feels different to each of us.</h2><p>A familiar corner can bring comfort one day and feel overwhelming the next. Our changing bodies, minds, rhythms and relationships shape how we experience everyday spaces.</p><p>Through eight playful invitations, this MA research project explores the spatial knowledge within lived experience : beyond conventional maps, standards and checklists.</p><h3 class="about-subtitle">Why this research?</h3><p>Accessibility is often described through fixed standards, but our needs and capacities can change from one moment to another. This research pays attention to what spatial plans may overlook: fatigue and pauses, pleasure and comfort, waiting, care, and the small arrangements that shape everyday life.</p><p>Rather than asking you to evaluate spaces against a checklist, the toolkit invites you to show what a place feels like <em>from your own experience</em>. Your contributions may help develop alternative spatial maps, diagrams and speculative design experiments, according to the permissions you choose.</p><h3 class="about-subtitle">Who can participate?</h3><p>Anyone interested in exploring their everyday spatial experiences. You do not need design knowledge or special materials. You are welcome to share experiences related to disability, health or your body if they feel relevant to you, but there is no expectation to disclose medical or personal information. Choose one or more games, adapt them, leave them unfinished or return later. Writing, drawing, photos, collage, voice notes and memories are equally welcome.</p><p class="fine">Cripping Space: Toward a Fluctuating Spatial Design of Care · Hilal Bozkurt Keskin · TH Köln</p></div><div class="mini"><div class="eyebrow">How participation works</div><div class="miniline"><b>01</b> Choose any game that interests you.</div><div class="miniline"><b>02</b> Play anywhere, in your own time or from memory.</div><div class="miniline"><b>03</b> Draw, write, photograph, collage or record a voice note.</div><div class="miniline"><b>04</b> Share only what you wish to share.</div></div></div></section>
 <section class="section who" id="who"><div class="container"><div class="sectionhead"><div><span class="eyebrow">Before we begin · Optional</span><h2>Who Am I?</h2></div><p>A little about you, in your own words. You can answer any questions, use another format, or skip this entirely.</p></div><div class="whogrid"><div class="whointro"><p>Our identities, bodies, minds, experiences and relationships can shape the spaces we inhabit. Yet no single category or diagnosis can fully describe a person.</p><p>If you want, introduce yourself through words, a drawing, a collage or a voice note. Experiences related to disability, health or your body are welcome if you choose to share them, but they are never expected.</p><a class="downloadlink" href="downloads/who-am-i-card.pdf" download="Cripping-Space-Who-Am-I-Card.pdf"><span aria-hidden="true">↓</span><span><strong>Download Who Am I? Card</strong><small>Original two-page A5 card (PDF)</small></span></a><div class="field"><label for="whoCardFile">Attach your completed Who Am I? card (optional)</label><input type="file" id="whoCardFile" accept="application/pdf,image/*,audio/*,.txt,.doc,.docx"><span class="fine" id="whoCardStatus" role="status">Choose a completed card, photograph, drawing or audio note. The file stays on your device until you submit it.</span></div><button type="button" class="btn alt" id="whoCardToShare">Continue to sharing</button><p class="fine">You do not have to complete this before exploring the games.</p></div><div class="panel"><div class="eyebrow">Write here if you like</div><div class="field"><label for="whoName">Chosen name or participant code (optional)</label><input id="whoName" autocomplete="off" placeholder="Whatever identifier feels right"></div><div class="field"><label for="whoDescribe">How would you describe yourself?</label><textarea id="whoDescribe" placeholder="In your own words..."></textarea></div><div class="field"><label for="whoWhere">Where are you participating from?</label><input id="whoWhere" placeholder="A city, country or another description"></div><div class="field"><label for="whoSpaces">What kinds of spaces are part of your everyday life?</label><textarea id="whoSpaces" placeholder="Places, environments, routines..."></textarea></div><div class="field"><label for="whoContext">Is there anything you'd like me to keep in mind while looking at your contributions?</label><textarea id="whoContext" placeholder="Anything you choose to share..."></textarea></div><button id="saveWho" type="button" class="btn">Download my answers (.txt)</button><p class="fine">This is a local draft, not a submission. Nothing entered here is sent or stored by this website. You can share the downloaded file through the contribution form when submissions open.</p></div></div></div></section>
 <section class="section" id="explore"><div class="container"><div class="sectionhead"><div><span class="eyebrow">Eight invitations</span><h2>Choose your game.</h2></div><p>There is no order to follow. You can play one game, several, or none. Return whenever you want.</p></div><div id="gameGrid" class="games"></div><article id="gameDetail" class="detail" aria-live="polite"><div class="detailtop" id="detailTop"><button class="close" id="closeDetail" type="button">← All games</button><div class="eyebrow" id="detailNum"></div><h3 id="detailTitle"></h3><p id="detailQuestion"></p></div><div class="detailbody"><div><h4>What is this about?</h4><p id="detailAbout"></p><h4 class="detail-subtitle">What might you notice?</h4><p id="detailMore"></p><p class="fine" id="detailNote"></p></div><div><h4>How to play</h4><ol id="detailSteps"></ol><div class="prompt"><strong>You might ask yourself</strong><p id="detailPrompt"></p></div><div class="downloads" aria-label="Download material for this game">
@@ -70,7 +159,9 @@
 <button class="btn" type="button" id="shareGame">Share something from this game ↗</button></div></div></article></div></section>
 <section class="section share" id="share"><div class="container sharegrid"><div><span class="eyebrow">Contribute on your own terms</span><h2>Share your experience.</h2><p>A few words, an unfinished drawing, a map, a photograph, or a voice note: all are welcome. If you wish, you may share experiences related to disability, health or your body, but you never have to. You can leave activities unfinished and share only what feels comfortable to you.</p><p>Submissions may be made separately on different days. Your choice about participation, public display, academic use, and credit should remain yours.</p><p id="submissionAvailability" class="fine">Online submissions are currently closed.</p><a class="textlink" href="mailto:me@hilalbozk.com?subject=Cripping%20Space%20-%20Question">Questions? Please contact the researcher</a></div><form id="contributionForm" class="panel"><h3 style="font-size:26px;line-height:1.2;margin:12px 0 20px">Your contribution</h3><div class="field"><label for="chosen">Chosen name or participant code (optional)</label><input id="chosen" maxlength="200" placeholder="Your chosen identifier" autocomplete="off"></div><div class="field"><label for="gameSelect">Game</label><select id="gameSelect"><option value="">Choose a game (optional)</option></select></div><div class="field"><label for="reflection">Your words (optional)</label><textarea id="reflection" maxlength="10000" placeholder="Share a thought, memory or experience in your own words..."></textarea></div><div class="field"><label for="uploads">Photographs, drawings, audio, Who Am I? card or PDF (optional)</label><input type="file" id="uploads" accept="image/*,audio/*,application/pdf,.txt,.doc,.docx,.heic,.heif" aria-describedby="fileNote" multiple><span class="fine" id="fileNote">Attach up to five files, with 10 MB per file and 20 MB combined.</span></div><div class="check"><input type="checkbox" id="consent" required><label for="consent">I understand that participation is voluntary and that research use requires informed consent.</label></div><div class="check"><input type="checkbox" id="reproduce"><label for="reproduce">I would consider allowing my original contribution to appear in the thesis (optional; separate formal consent required).</label></div><button type="submit" id="submit" class="btn" disabled>Submissions closed</button><p id="formStatus" class="status" role="status"></p></form></div></section>
 </main>
-<footer class="footer"><div class="footerinner"><div><span class="small">MA Integrated Design Research · TH Köln</span><div><a href="mailto:me@hilalbozk.com">me@hilalbozk.com</a></div></div></div></footer>
+<footer class="footer"><div class="footerinner"><div><span class="small">MA Integrated Design Research · TH Köln</span><div><a href="mailto:me@hilalbozk.com">me@hilalbozk.com</a></div></div>
+<button class="theme-button" id="themeButton" type="button" hidden><span aria-hidden="true"></span></button>
+</div></footer>
 <script>
 const GAMES=[
 {id:'01',title:'The Invisible Architecture Collection',q:'What quietly shapes the spaces you inhabit?',about:'Collect overlooked spatial details that become meaningful to you : comforting, frustrating, curious, joyful or seemingly insignificant.',steps:['Notice a small detail in a space you inhabit.','Record it through a photo, drawing, a few words or a voice note.','Collect as many or as few details as you like, including memories.'],ask:'Where did you notice it? What was happening between you and the space? Why did it stand out?',more:'This might be a quiet corner that helps you rest, an unexpected moment of care, an object you lean on, or a detail that makes a place confusing. The collection can hold joy and frustration at the same time. A single observation is enough.',note:'Your collection does not have to focus on barriers or problems.',tone:'#c7e5e9'},
