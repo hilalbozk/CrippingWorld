@@ -1,5 +1,6 @@
 const submissionEndpoint = document.querySelector('meta[name="submission-endpoint"]').content.trim();
 const contributionForm = document.getElementById('contributionForm');
+const gameInputs = Array.from(contributionForm.querySelectorAll('input[name="game"]'));
 const submitButton = document.getElementById('submit');
 const uploads = document.getElementById('uploads');
 const formStatus = document.getElementById('formStatus');
@@ -22,8 +23,6 @@ const supportedFile = /\.(pdf|jpg|jpeg|png|gif|webp|heic|heif|mp3|m4a|aac|wav|og
 if (submissionEndpoint) {
   submitButton.disabled = false;
   submitButton.textContent = 'Submit contribution';
-  document.getElementById('submissionAvailability').textContent =
-    'Your contribution will be sent to the study team’s sciebo storage when you submit it.';
   document.getElementById('whoAvailability').textContent =
     'Your answers and any attached file will go to the study team’s sciebo storage when you submit.';
 }
@@ -88,6 +87,13 @@ contributionForm.addEventListener('submit', async event => {
   event.preventDefault();
   if (!submissionEndpoint || contributionForm.hasAttribute('aria-busy')) return;
 
+  const games = gameInputs.filter(input => input.checked).map(input => input.value);
+  if (!games.length) {
+    formStatus.textContent = 'Select at least one game before submitting.';
+    gameInputs[0].focus();
+    return;
+  }
+
   const files = Array.from(uploads.files);
   const reflection = document.getElementById('reflection').value.trim();
   if (!reflection && !files.length) {
@@ -101,7 +107,7 @@ contributionForm.addEventListener('submit', async event => {
     endpoint: submissionEndpoint,
     submission: {
       chosen: document.getElementById('chosen').value,
-      game: document.getElementById('gameSelect').value,
+      game: games,
       reflection,
       consentAcknowledged: document.getElementById('consent').checked,
       considerThesisReproduction: document.getElementById('reproduce').checked

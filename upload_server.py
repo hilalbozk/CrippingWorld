@@ -20,6 +20,7 @@ MAX_FILES = 5
 MAX_FILE_BYTES = 10 * 1024**2
 MAX_TOTAL_BYTES = 20 * 1024**2
 MAX_REQUEST_BYTES = 4 * ((MAX_TOTAL_BYTES + 2) // 3) + 128 * 1024
+GAME_IDS = frozenset(f"{number:02}" for number in range(1, 9))
 ALLOWED_EXTENSIONS = {
     ".pdf", ".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif",
     ".mp3", ".m4a", ".aac", ".wav", ".ogg", ".opus", ".webm", ".flac",
@@ -48,9 +49,18 @@ def archive_submission(payload, receipt, *, who_am_i=False):
         raise InvalidSubmission("Invalid submission.")
     chosen = text_field(payload, "chosen", 200)
     reflection = text_field(payload, "reflection", 10000)
-    game = text_field(payload, "game", 2)
-    if game and game not in {f"{number:02}" for number in range(1, 9)}:
-        raise InvalidSubmission("Choose a game from the list.")
+    # Older forms send a single ID. An older server rejects the new array.
+    games = payload.get("game", "")
+    if isinstance(games, str):
+        game = text_field(payload, "game", 2)
+        games = [game] if game else []
+    if (
+        not isinstance(games, list)
+        or len(games) > len(GAME_IDS)
+        or any(not isinstance(game, str) or game not in GAME_IDS for game in games)
+    ):
+        raise InvalidSubmission("Choose games from the list.")
+    games = list(dict.fromkeys(games))
     if payload.get("consentAcknowledged") is not True:
         raise InvalidSubmission("Please acknowledge the participation statement.")
     reproduce = payload.get("considerThesisReproduction")
@@ -74,8 +84,11 @@ def archive_submission(payload, receipt, *, who_am_i=False):
             raise InvalidSubmission("Choose one Who Am I attachment.")
         if not (chosen or any(who_answers.values()) or uploads):
             raise InvalidSubmission("Add an answer or a file.")
-    elif not (reflection or uploads):
-        raise InvalidSubmission("Add a reflection or a file.")
+    else:
+        if not games:
+            raise InvalidSubmission("Select at least one game before submitting.")
+        if not (reflection or uploads):
+            raise InvalidSubmission("Add a reflection or a file.")
 
     archive = io.BytesIO()
     files = []
@@ -106,8 +119,8 @@ def archive_submission(payload, receipt, *, who_am_i=False):
         manifest = {
             "id": receipt,
             "received_at": datetime.now(timezone.utc).isoformat(),
-            "chosen_name_or_code": chosen,
-            "game": game,
+            "chosen_name": chosen,
+            "game": games[0] if len(games) == 1 else "",
             "reflection": reflection,
             "participation_statement_acknowledged": True,
             "would_consider_thesis_reproduction": reproduce,
@@ -115,6 +128,8 @@ def archive_submission(payload, receipt, *, who_am_i=False):
         }
         if who_answers is not None:
             manifest["who_am_i"] = who_answers
+        else:
+            manifest["games"] = games
         bundle.writestr("submission.json", json.dumps(manifest, ensure_ascii=True, indent=2))
     return archive.getvalue()
 
